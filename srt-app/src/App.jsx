@@ -17,8 +17,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-
-// --- SECTION: Page Imports ---
+import { useOfflineSync } from "./hooks/useOfflineSync";
 
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
@@ -28,11 +27,11 @@ import ReportPage from "./pages/ReportPage";
 import MapPage from "./pages/MapPage";
 import AdminPage from "./pages/AdminPage";
 
-function App() {
+function AppRoutes() {
+  useOfflineSync();
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
+    <BrowserRouter>
+      <Routes>
 
           {/* --- SECTION: Public Routes --- */}
           <Route path="/"         element={<LandingPage />} />
@@ -51,6 +50,13 @@ function App() {
 
         </Routes>
       </BrowserRouter>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
     </AuthProvider>
   );
 }

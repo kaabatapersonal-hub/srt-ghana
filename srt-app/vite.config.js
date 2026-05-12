@@ -18,17 +18,16 @@ export default defineConfig({
       registerType: "autoUpdate",
 
       manifest: {
-        name: "Sanitation Resilience Tracker",
+        name: "SRT - Sanitation Resilience Tracker",
         short_name: "SRT",
         description: "Climate-resilient sanitation monitoring for Northern Ghana",
-        theme_color: "#2e7d32",       // dark green — represents health and environment
+        theme_color: "#2e7d32",
         background_color: "#ffffff",
-        display: "standalone",        // hides the browser chrome so it looks like a native app
+        display: "standalone",
         start_url: "/",
         icons: [
-          // These icon files must be placed in the /public folder
-          { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
-          { src: "/icon-512.png", sizes: "512x512", type: "image/png" }
+          { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any maskable" },
+          { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any maskable" }
         ]
       }
     })

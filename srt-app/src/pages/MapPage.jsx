@@ -86,6 +86,22 @@ const FLOOD_ZONES_GEOJSON = {
         ]],
       },
     },
+    {
+      type: "Feature",
+      properties: {
+        name: "Tamale South",
+        risk: "Moderate",
+        note: "Urban drainage overflow during heavy rains — low-lying areas near the Kulpawn tributary",
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[
+          [-0.92, 9.22], [-0.72, 9.22], [-0.68, 9.32],
+          [-0.72, 9.44], [-0.88, 9.46], [-0.96, 9.38],
+          [-0.94, 9.28], [-0.92, 9.22],
+        ]],
+      },
+    },
   ],
 };
 

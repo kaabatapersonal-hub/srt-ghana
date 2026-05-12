@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { submitReport } from "../services/reportService";
+import { addToOfflineQueue } from "../hooks/useOfflineSync";
 import Navbar from "../components/Navbar";
 import StepIndicator from "../components/StepIndicator";
 import ConditionBadge from "../components/ConditionBadge";
@@ -55,6 +56,7 @@ function ReportPage() {
   const [isSubmitting,    setIsSubmitting]    = useState(false);
   const [submitSuccess,   setSubmitSuccess]   = useState(false);
   const [submittedDocId,  setSubmittedDocId]  = useState("");
+  const [savedOffline,    setSavedOffline]    = useState(false);
 
   function validateStep() {
     switch (currentStep) {
@@ -119,16 +121,29 @@ function ReportPage() {
   }
 
   async function handleSubmit() {
+    const reportData = {
+      facilityName:    facilityName.trim(),
+      facilityType,
+      conditionStatus,
+      description:     description.trim(),
+      location:        gpsLocation,
+    };
+
+    if (!navigator.onLine) {
+      addToOfflineQueue(reportData, {
+        uid:         currentUser.uid,
+        displayName: currentUser.displayName || currentUser.email,
+        email:       currentUser.email,
+      });
+      setSavedOffline(true);
+      setSubmitSuccess(true);
+      return;
+    }
+
     setIsSubmitting(true);
     setStepError("");
     try {
-      const newId = await submitReport({
-        facilityName:    facilityName.trim(),
-        facilityType,
-        conditionStatus,
-        description:     description.trim(),
-        location:        gpsLocation,
-      }, currentUser);
+      const newId = await submitReport(reportData, currentUser);
       setSubmittedDocId(newId);
       setSubmitSuccess(true);
     } catch (err) {
@@ -150,6 +165,7 @@ function ReportPage() {
     setStepError("");
     setSubmitSuccess(false);
     setSubmittedDocId("");
+    setSavedOffline(false);
   }
 
   if (submitSuccess) {
@@ -159,14 +175,25 @@ function ReportPage() {
         <div className="report-content">
           <div className="report-success-card">
             <div className="success-icon-circle">
-              <span className="success-check">✓</span>
+              <span className="success-check">{savedOffline ? "📶" : "✓"}</span>
             </div>
-            <h2 className="report-success-title">Report Submitted!</h2>
+            <h2 className="report-success-title">
+              {savedOffline ? "Saved Locally" : "Report Submitted!"}
+            </h2>
             <p className="report-success-text">
-              Your report for <strong>{facilityName}</strong> has been saved
-              and is pending admin review.
-              <br />
-              Reference ID: <strong style={{ fontFamily: "monospace" }}>{submittedDocId}</strong>
+              {savedOffline ? (
+                <>
+                  No connection — your report for <strong>{facilityName}</strong> will be
+                  saved and submitted when you&apos;re back online.
+                </>
+              ) : (
+                <>
+                  Your report for <strong>{facilityName}</strong> has been saved
+                  and is pending admin review.
+                  <br />
+                  Reference ID: <strong style={{ fontFamily: "monospace" }}>{submittedDocId}</strong>
+                </>
+              )}
             </p>
             <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
               <button className="btn-submit-another" onClick={handleSubmitAnother}>
