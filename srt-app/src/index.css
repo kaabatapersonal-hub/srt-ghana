@@ -590,6 +590,295 @@ a {
   background: var(--color-primary-hover);
 }
 
+/* --- SECTION: Stat Cards --- */
+
+/* Small eyebrow label above a section (e.g. "My Overview", "System") */
+.section-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--color-text-muted);
+  margin-bottom: 0.75rem;
+}
+
+/* Responsive grid — 6 cards side by side on desktop, 3 on tablet, 2 on mobile */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.stat-card {
+  background: var(--color-white);
+  border-radius: var(--radius);
+  padding: 1.1rem 1rem;
+  border-left: 4px solid transparent;  /* colored accent on the left edge */
+  box-shadow: var(--shadow-sm);
+}
+
+/* The big number in the stat card */
+.stat-card-value {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+
+/* The label below the number */
+.stat-card-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+
+/* Color variants — left border + number color */
+.stat-blue   { border-left-color: #1565c0; }
+.stat-blue   .stat-card-value { color: #1565c0; }
+
+.stat-green  { border-left-color: #2e7d32; }
+.stat-green  .stat-card-value { color: #2e7d32; }
+
+.stat-amber  { border-left-color: #f57c00; }
+.stat-amber  .stat-card-value { color: #f57c00; }
+
+.stat-orange { border-left-color: #e64a19; }
+.stat-orange .stat-card-value { color: #e64a19; }
+
+.stat-red    { border-left-color: #c62828; }
+.stat-red    .stat-card-value { color: #c62828; }
+
+.stat-purple { border-left-color: #6a1b9a; }
+.stat-purple .stat-card-value { color: #6a1b9a; }
+
+/* Note showing system-wide totals for regular (non-admin) users */
+.system-total-note {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  margin-bottom: 1.75rem;
+}
+
+/* Loading text placeholder while Firestore data arrives */
+.stats-loading,
+.reports-loading {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  padding: 1rem 0;
+}
+
+/* --- SECTION: Dashboard Two-Column Layout --- */
+
+.dashboard-columns {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 1.5rem;
+  align-items: start;    /* columns don't stretch to match each other's height */
+  margin-top: 1.75rem;
+}
+
+/* Heading row for a dashboard section */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+/* --- SECTION: Recent Reports List --- */
+
+.reports-list {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;   /* keeps rounded corners on child rows */
+}
+
+/* A single report row inside the list */
+.report-row {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.report-row:last-child {
+  border-bottom: none;
+}
+
+/* Top line: facility name + condition badge */
+.report-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+
+.report-facility-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Bottom line: facility type, submitter, date */
+.report-row-bottom {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+}
+
+.report-meta {
+  color: var(--color-text-muted);
+}
+
+/* Small "Pending" tag shown on unreviewed reports */
+.report-status-pending {
+  background: #f3e5f5;
+  color: #6a1b9a;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 8px;
+  border: 1px solid #ce93d8;
+  margin-left: 0.25rem;
+}
+
+/* --- SECTION: Condition Badge (used in report rows and future map popups) --- */
+
+.condition-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;   /* prevents badge from being squashed when facility name is long */
+}
+
+.badge-good     { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+.badge-fair     { background: #fff8e1; color: #e65100; border: 1px solid #ffe082; }
+.badge-poor     { background: #fbe9e7; color: #bf360c; border: 1px solid #ffab91; }
+.badge-critical { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+.badge-unknown  { background: #f5f5f5; color: #757575; border: 1px solid #e0e0e0; }
+
+/* --- SECTION: Empty State (no reports yet) --- */
+
+.empty-state {
+  background: var(--color-white);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+}
+
+.empty-state-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-text {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state-link {
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+.empty-state-link:hover {
+  text-decoration: underline;
+}
+
+/* --- SECTION: Quick Actions Sidebar --- */
+
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Base style for all quick action buttons */
+.quick-action-btn {
+  display: block;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
+  transition: opacity 0.2s;
+}
+.quick-action-btn:hover {
+  opacity: 0.88;
+}
+
+/* Green primary — Submit Report */
+.quick-action-btn.primary {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+/* Blue secondary — View Map */
+.quick-action-btn.secondary {
+  background: var(--color-blue);
+  color: var(--color-white);
+}
+
+/* Purple admin — Admin Panel */
+.quick-action-btn.admin {
+  background: #6a1b9a;
+  color: var(--color-white);
+}
+
+/* --- SECTION: Condition Legend (sidebar) --- */
+
+.condition-legend {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--color-text-dark);
+  margin-bottom: 0.45rem;
+}
+.legend-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Colored circle dot for each condition level */
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-good     { background: #2e7d32; }
+.dot-fair     { background: #f57c00; }
+.dot-poor     { background: #e64a19; }
+.dot-critical { background: #c62828; }
+
 /* --- SECTION: Responsive --- */
 
 @media (max-width: 640px) {
@@ -609,5 +898,15 @@ a {
 
   .dashboard-content {
     padding: 1.25rem 1rem;
+  }
+
+  /* Stack the two dashboard columns vertically on mobile */
+  .dashboard-columns {
+    grid-template-columns: 1fr;
+  }
+
+  /* Stat cards: 2 per row on small screens */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
