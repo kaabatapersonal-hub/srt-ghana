@@ -3,7 +3,7 @@
 // Defines every page route and wraps protected pages with ProtectedRoute.
 //
 // Route map:
-//   /               → redirects to /dashboard
+//   /               → LandingPage      (public — shown to everyone)
 //   /login          → LoginPage        (public)
 //   /register       → RegisterPage     (public)
 //   /dashboard      → DashboardPage    (requires login)
@@ -11,15 +11,16 @@
 //   /map            → MapPage          (requires login)
 //   /admin          → AdminPage        (requires admin role)
 //
-// AuthProvider is placed here so it wraps ALL routes and every component has access to auth state.
+// AuthProvider wraps everything so all routes can access auth state.
 
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // --- SECTION: Page Imports ---
 
+import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -29,56 +30,24 @@ import AdminPage from "./pages/AdminPage";
 
 function App() {
   return (
-    // AuthProvider wraps BrowserRouter so auth state is available inside all route components
     <AuthProvider>
       <BrowserRouter>
         <Routes>
 
-          {/* --- SECTION: Default Redirect --- */}
-          {/* Visiting the root URL sends the user to /dashboard (ProtectedRoute handles auth check) */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
           {/* --- SECTION: Public Routes --- */}
-          {/* These pages do not require login */}
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/"         element={<LandingPage />} />
+          <Route path="/login"    element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
           {/* --- SECTION: Protected Routes (any logged-in user) --- */}
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/report"
-            element={
-              <ProtectedRoute>
-                <ReportPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/map"
-            element={
-              <ProtectedRoute>
-                <MapPage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          <Route path="/report"    element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
+          <Route path="/map"       element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
 
           {/* --- SECTION: Admin-Only Route --- */}
-          {/* requireAdmin={true} means non-admin users are redirected to /dashboard */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminPage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/admin" element={
+            <ProtectedRoute requireAdmin={true}><AdminPage /></ProtectedRoute>
+          } />
 
         </Routes>
       </BrowserRouter>

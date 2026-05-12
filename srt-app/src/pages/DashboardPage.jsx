@@ -1,27 +1,36 @@
 // DashboardPage.jsx
-// The main dashboard for the Sanitation Resilience Tracker.
+// Main dashboard for logged-in users. Shows live Firestore stats, a condition
+// donut chart, a system status banner, and a recent reports list.
 //
-// What it shows:
-//   - Welcome header with role badge
-//   - Stat cards: total reports + breakdown by condition + pending count
-//   - Recent reports list (admins see all reports; regular users see their own)
-//   - Quick action buttons (Submit Report, View Map, Admin Panel for admins)
+// Admin view: all system stats + all recent reports.
+// User view:  personal stats + their own recent reports + system total note.
 //
-// All data is loaded in real time from Firestore using the useReports hook.
-// Stats are computed client-side from the fetched reports (no extra queries = Spark plan safe).
+// Uses recharts PieChart for the condition breakdown donut chart.
+// All data comes from the useReports real-time hook — no extra Firestore reads.
 //
 // Route: /dashboard (protected — requires login)
 
 import React from "react";
 import { Link } from "react-router-dom";
+import {
+  PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
+} from "recharts";
 import { useAuth } from "../context/AuthContext";
 import { useReports } from "../hooks/useReports";
 import Navbar from "../components/Navbar";
 import ConditionBadge from "../components/ConditionBadge";
+import Footer from "../components/Footer";
 
-// --- SECTION: Helper — Facility Type Labels ---
+// --- SECTION: Constants ---
 
-// Maps the stored facility type value to a readable label for the report list
+// Colors used both in the donut chart slices and the stat cards
+const CONDITION_COLORS = {
+  good:     "#2e7d32",
+  fair:     "#f57c00",
+  poor:     "#e64a19",
+  critical: "#c62828",
+};
+
 const FACILITY_TYPE_LABELS = {
   borehole:        "Borehole / Hand Pump",
   latrine:         "Latrine / Toilet Block",
@@ -31,26 +40,17 @@ const FACILITY_TYPE_LABELS = {
   solid_waste:     "Solid Waste Site",
 };
 
-// --- SECTION: Helper — Format Firestore Timestamp ---
+// --- SECTION: Helpers ---
 
-// Converts a Firestore server timestamp to a readable date string
-// Firestore timestamps have a .toDate() method that returns a JS Date object
-function formatReportDate(firestoreTimestamp) {
-  if (!firestoreTimestamp || !firestoreTimestamp.toDate) {
-    return "Just now"; // report was just submitted and timestamp hasn't synced yet
-  }
+function formatDate(ts) {
+  if (!ts || !ts.toDate) return "Just now";
   return new Intl.DateTimeFormat("en-GB", {
-    day:    "numeric",
-    month:  "short",
-    hour:   "2-digit",
-    minute: "2-digit",
-  }).format(firestoreTimestamp.toDate());
+    day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+  }).format(ts.toDate());
 }
 
 // --- SECTION: StatCard Sub-Component ---
 
-// Renders a single stat card with a number, label, and accent color
-// colorClass matches CSS classes: stat-blue, stat-green, stat-amber, stat-orange, stat-red, stat-purple
 function StatCard({ value, label, colorClass }) {
   return (
     <div className={`stat-card ${colorClass}`}>
@@ -60,27 +60,42 @@ function StatCard({ value, label, colorClass }) {
   );
 }
 
+// --- SECTION: Skeleton Loader Sub-Component ---
+
+// Shown while Firestore is loading — prevents blank/janky screens
+function DashboardSkeleton() {
+  return (
+    <div className="dashboard-skeleton">
+      <div className="stats-grid">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="skeleton skeleton-stat-card" />
+        ))}
+      </div>
+      <div className="skeleton-section">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="skeleton skeleton-report-row" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // --- SECTION: ReportRow Sub-Component ---
 
-// Renders a single row in the recent reports list
 function ReportRow({ report, showSubmitter }) {
-  const facilityTypeLabel = FACILITY_TYPE_LABELS[report.facilityType] || report.facilityType;
-
+  const typeLabel = FACILITY_TYPE_LABELS[report.facilityType] || report.facilityType;
   return (
     <div className="report-row">
       <div className="report-row-top">
-        {/* Facility name on the left, condition badge on the right */}
         <span className="report-facility-name">{report.facilityName}</span>
         <ConditionBadge condition={report.conditionStatus} />
       </div>
       <div className="report-row-bottom">
-        <span className="report-meta">{facilityTypeLabel}</span>
-        {/* Only show the submitter name in admin view */}
+        <span className="report-meta">{typeLabel}</span>
         {showSubmitter && report.submittedBy?.displayName && (
           <span className="report-meta">· {report.submittedBy.displayName}</span>
         )}
-        <span className="report-meta">· {formatReportDate(report.createdAt)}</span>
-        {/* Show pending badge so admins can spot unreviewed reports at a glance */}
+        <span className="report-meta">· {formatDate(report.createdAt)}</span>
         {report.status === "pending" && (
           <span className="report-status-pending">Pending</span>
         )}
@@ -89,7 +104,76 @@ function ReportRow({ report, showSubmitter }) {
   );
 }
 
-// --- SECTION: Main Dashboard Component ---
+// --- SECTION: Condition Donut Chart Sub-Component ---
+
+// Recharts PieChart rendered as a donut showing condition breakdown
+function ConditionDonutChart({ stats }) {
+  const chartData = [
+    { name: "Good",     value: stats.good,     color: CONDITION_COLORS.good },
+    { name: "Fair",     value: stats.fair,     color: CONDITION_COLORS.fair },
+    { name: "Poor",     value: stats.poor,     color: CONDITION_COLORS.poor },
+    { name: "Critical", value: stats.critical, color: CONDITION_COLORS.critical },
+  ].filter((d) => d.value > 0); // hide slices with 0 value
+
+  // Show a message if there's no data to chart yet
+  if (chartData.length === 0) {
+    return (
+      <div className="chart-empty">
+        <p>No condition data yet. Submit reports to see the breakdown.</p>
+      </div>
+    );
+  }
+
+  return (
+    <ResponsiveContainer width="100%" height={220}>
+      <PieChart>
+        <Pie
+          data={chartData}
+          cx="50%"
+          cy="50%"
+          innerRadius={60}    // the gap in the middle makes it a donut
+          outerRadius={88}
+          paddingAngle={3}    // small gap between slices for clarity
+          dataKey="value"
+        >
+          {chartData.map((entry, index) => (
+            <Cell key={index} fill={entry.color} stroke="none" />
+          ))}
+        </Pie>
+        <Tooltip formatter={(value, name) => [`${value} reports`, name]} />
+        <Legend
+          iconType="circle"
+          iconSize={10}
+          formatter={(value) => (
+            <span style={{ fontSize: "0.8rem", color: "#757575" }}>{value}</span>
+          )}
+        />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+}
+
+// --- SECTION: System Status Banner Sub-Component ---
+
+// Shows a colored alert banner telling admins how many reports need review
+function SystemStatusBanner({ pendingCount }) {
+  if (pendingCount === 0) {
+    return (
+      <div className="status-banner green">
+        ✅ All reports reviewed — no pending submissions.
+      </div>
+    );
+  }
+  const urgencyClass = pendingCount > 5 ? "red" : "amber";
+  return (
+    <div className={`status-banner ${urgencyClass}`}>
+      ⚠️ {pendingCount} report{pendingCount !== 1 ? "s" : ""} pending admin review.
+      {pendingCount > 5 && " Action required."}
+    </div>
+  );
+}
+
+// --- SECTION: Main DashboardPage Component ---
 
 function DashboardPage() {
   const { currentUser, isAdmin } = useAuth();
@@ -99,7 +183,6 @@ function DashboardPage() {
 
   // --- SECTION: Compute Stats ---
 
-  // System-wide stats — computed from all fetched reports
   const systemStats = {
     total:    reports.length,
     good:     reports.filter((r) => r.conditionStatus === "good").length,
@@ -109,12 +192,7 @@ function DashboardPage() {
     pending:  reports.filter((r) => r.status === "pending").length,
   };
 
-  // Current user's own reports — filtered from the same fetched array (no extra Firestore read)
-  const myReports = reports.filter(
-    (r) => r.submittedBy?.uid === currentUser?.uid
-  );
-
-  // Personal stats derived from the user's own reports
+  const myReports = reports.filter((r) => r.submittedBy?.uid === currentUser?.uid);
   const myStats = {
     total:    myReports.length,
     good:     myReports.filter((r) => r.conditionStatus === "good").length,
@@ -124,145 +202,110 @@ function DashboardPage() {
     pending:  myReports.filter((r) => r.status === "pending").length,
   };
 
-  // Admins see all recent reports; regular users see only their own
+  const displayStats  = isAdmin ? systemStats : myStats;
+  const statsLabel    = isAdmin ? "System Overview" : "My Reports";
   const recentReports = isAdmin ? reports.slice(0, 10) : myReports.slice(0, 5);
-
-  // The stats to display in the cards depend on role
-  const displayStats = isAdmin ? systemStats : myStats;
-  const statsLabel   = isAdmin ? "System" : "My";
 
   // --- SECTION: Render ---
 
   return (
-    <div className="dashboard-page">
+    <div className="dashboard-page page-fade-in">
       <Navbar />
 
       <div className="dashboard-content">
 
-        {/* --- SECTION: Welcome Header --- */}
+        {/* Welcome header */}
         <div className="dashboard-header">
           <h2 className="dashboard-greeting">
             Welcome back, {userGreetingName}
             {isAdmin && <span className="role-badge">Admin</span>}
           </h2>
-          <p className="dashboard-subtext">
-            Sanitation Resilience Tracker — Northern Ghana
-          </p>
+          <p className="dashboard-subtext">Sanitation Resilience Tracker — Northern Ghana</p>
         </div>
 
-        {/* Show Firestore error if the listener failed */}
-        {error && (
-          <div className="error-message" style={{ marginBottom: "1.5rem" }}>
-            {error}
-          </div>
-        )}
+        {error && <div className="error-message" style={{ marginBottom: "1rem" }}>{error}</div>}
 
-        {/* --- SECTION: Stat Cards --- */}
         {isLoading ? (
-          <div className="stats-loading">Loading stats...</div>
+          <DashboardSkeleton />
         ) : (
           <>
-            {/* Show the label so user understands whose stats they're viewing */}
-            <p className="section-eyebrow">{statsLabel} Overview</p>
+            {/* --- SECTION: System Status Banner --- */}
+            <SystemStatusBanner pendingCount={systemStats.pending} />
+
+            {/* --- SECTION: Stat Cards --- */}
+            <p className="section-eyebrow" style={{ marginTop: "1.5rem" }}>{statsLabel}</p>
             <div className="stats-grid">
-              <StatCard value={displayStats.total}    label="Total Reports"   colorClass="stat-blue"   />
-              <StatCard value={displayStats.good}     label="Good"            colorClass="stat-green"  />
-              <StatCard value={displayStats.fair}     label="Fair"            colorClass="stat-amber"  />
-              <StatCard value={displayStats.poor}     label="Poor"            colorClass="stat-orange" />
-              <StatCard value={displayStats.critical} label="Critical"        colorClass="stat-red"    />
-              <StatCard value={displayStats.pending}  label="Pending Review"  colorClass="stat-purple" />
+              <StatCard value={displayStats.total}    label="Total Reports"  colorClass="stat-blue"   />
+              <StatCard value={displayStats.good}     label="Good"           colorClass="stat-green"  />
+              <StatCard value={displayStats.fair}     label="Fair"           colorClass="stat-amber"  />
+              <StatCard value={displayStats.poor}     label="Poor"           colorClass="stat-orange" />
+              <StatCard value={displayStats.critical} label="Critical"       colorClass="stat-red"    />
+              <StatCard value={displayStats.pending}  label="Pending Review" colorClass="stat-purple" />
             </div>
 
-            {/* Admin: also show the system total when viewing personal stats */}
             {!isAdmin && systemStats.total > 0 && (
               <p className="system-total-note">
                 {systemStats.total} total report{systemStats.total !== 1 ? "s" : ""} across the system
                 · {systemStats.pending} pending review
               </p>
             )}
+
+            {/* --- SECTION: Chart + Reports Columns --- */}
+            <div className="dashboard-columns" style={{ marginTop: "1.5rem" }}>
+
+              {/* Left: Recent reports list */}
+              <div className="dashboard-column-main">
+                <div className="section-header">
+                  <h3 className="section-title">
+                    {isAdmin ? "All Recent Reports" : "My Recent Reports"}
+                  </h3>
+                </div>
+
+                {recentReports.length === 0 ? (
+                  <div className="empty-state">
+                    <p className="empty-state-icon">📋</p>
+                    <p className="empty-state-text">No reports yet.</p>
+                    <Link to="/report" className="empty-state-link">Submit your first report →</Link>
+                  </div>
+                ) : (
+                  <div className="reports-list">
+                    {recentReports.map((r) => (
+                      <ReportRow key={r.id} report={r} showSubmitter={isAdmin} />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Right: Donut chart + quick actions + legend */}
+              <div className="dashboard-column-side">
+
+                {/* Condition breakdown donut chart */}
+                <div className="section-header">
+                  <h3 className="section-title">Condition Breakdown</h3>
+                </div>
+                <div className="chart-card">
+                  <ConditionDonutChart stats={isAdmin ? systemStats : myStats} />
+                </div>
+
+                {/* Quick actions */}
+                <div className="section-header" style={{ marginTop: "1.25rem" }}>
+                  <h3 className="section-title">Quick Actions</h3>
+                </div>
+                <div className="quick-actions">
+                  <Link to="/report" className="quick-action-btn primary">+ Submit Report</Link>
+                  <Link to="/map"    className="quick-action-btn secondary">🗺️ View Map</Link>
+                  {isAdmin && (
+                    <Link to="/admin" className="quick-action-btn admin">🛠️ Admin Panel</Link>
+                  )}
+                </div>
+              </div>
+
+            </div>
           </>
         )}
-
-        {/* --- SECTION: Main Content Columns --- */}
-        <div className="dashboard-columns">
-
-          {/* Left column: Recent Reports list */}
-          <div className="dashboard-column-main">
-            <div className="section-header">
-              <h3 className="section-title">
-                {isAdmin ? "All Recent Reports" : "My Recent Reports"}
-              </h3>
-            </div>
-
-            {isLoading ? (
-              <div className="reports-loading">Loading reports...</div>
-            ) : recentReports.length === 0 ? (
-              <div className="empty-state">
-                <p className="empty-state-icon">📋</p>
-                <p className="empty-state-text">
-                  {isAdmin
-                    ? "No reports have been submitted yet."
-                    : "You haven't submitted any reports yet."}
-                </p>
-                <Link to="/report" className="empty-state-link">
-                  Submit your first report →
-                </Link>
-              </div>
-            ) : (
-              <div className="reports-list">
-                {recentReports.map((report) => (
-                  <ReportRow
-                    key={report.id}
-                    report={report}
-                    showSubmitter={isAdmin} // admins see who submitted each report
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Right column: Quick Actions */}
-          <div className="dashboard-column-side">
-            <div className="section-header">
-              <h3 className="section-title">Quick Actions</h3>
-            </div>
-
-            <div className="quick-actions">
-              <Link to="/report" className="quick-action-btn primary">
-                + Submit Report
-              </Link>
-              <Link to="/map" className="quick-action-btn secondary">
-                🗺️ View Map
-              </Link>
-              {isAdmin && (
-                <Link to="/admin" className="quick-action-btn admin">
-                  🛠️ Admin Panel
-                </Link>
-              )}
-            </div>
-
-            {/* Condition legend so users understand the color system */}
-            <div className="condition-legend">
-              <p className="section-eyebrow" style={{ marginBottom: "0.6rem" }}>
-                Condition Scale
-              </p>
-              <div className="legend-item">
-                <span className="legend-dot dot-good" /> Good — Fully functional
-              </div>
-              <div className="legend-item">
-                <span className="legend-dot dot-fair" /> Fair — Minor repair needed
-              </div>
-              <div className="legend-item">
-                <span className="legend-dot dot-poor" /> Poor — Urgent repair needed
-              </div>
-              <div className="legend-item">
-                <span className="legend-dot dot-critical" /> Critical — Health risk
-              </div>
-            </div>
-          </div>
-
-        </div>
       </div>
+
+      <Footer />
     </div>
   );
 }
