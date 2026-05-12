@@ -1,74 +1,65 @@
-// Generates minimal valid PNG files for PWA icons
+// Generates professional PWA icons for SRT.
 // Run once: node generate-icons.js
-// Produces public/icon-192.png and public/icon-512.png (solid #2e7d32 green)
+// Outputs: public/icon-192.png, public/icon-512.png
 
-import { createWriteStream } from "fs";
-import { deflateSync } from "zlib";
+import { createCanvas } from "@napi-rs/canvas";
+import { writeFileSync } from "fs";
 
-function buildPNG(size) {
-  const r = 0x2e, g = 0x7d, b = 0x32; // #2e7d32
+function drawWaterDrop(ctx, cx, cy, size) {
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - size);
+  ctx.bezierCurveTo(
+    cx + size * 0.55, cy - size * 0.3,
+    cx + size * 0.88, cy + size * 0.3,
+    cx,               cy + size * 0.72
+  );
+  ctx.bezierCurveTo(
+    cx - size * 0.88, cy + size * 0.3,
+    cx - size * 0.55, cy - size * 0.3,
+    cx,               cy - size
+  );
+  ctx.closePath();
+  ctx.fill();
+}
 
-  // PNG signature
-  const SIG = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+function generateIcon(size) {
+  const canvas = createCanvas(size, size);
+  const ctx    = canvas.getContext("2d");
 
-  function chunk(type, data) {
-    const typeBuf = Buffer.from(type, "ascii");
-    const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
-    const body = Buffer.concat([typeBuf, data]);
-    const crc = crc32(body);
-    const crcBuf = Buffer.alloc(4); crcBuf.writeUInt32BE(crc >>> 0);
-    return Buffer.concat([len, body, crcBuf]);
-  }
+  const cx = size / 2;
+  const cy = size / 2;
+  const r  = size * 0.46;
 
-  // CRC-32
-  const CRC_TABLE = (() => {
-    const t = new Uint32Array(256);
-    for (let n = 0; n < 256; n++) {
-      let c = n;
-      for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
-      t[n] = c;
-    }
-    return t;
-  })();
-  function crc32(buf) {
-    let c = 0xffffffff;
-    for (const byte of buf) c = CRC_TABLE[(c ^ byte) & 0xff] ^ (c >>> 8);
-    return (c ^ 0xffffffff);
-  }
+  // Dark green background circle
+  ctx.fillStyle = "#1a6b2e";
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
 
-  // IHDR: width, height, bit depth 8, color type 2 (RGB), compress 0, filter 0, interlace 0
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(size, 0);
-  ihdr.writeUInt32BE(size, 4);
-  ihdr[8] = 8; ihdr[9] = 2; ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;
+  // Subtle inner ring for depth
+  ctx.strokeStyle = "rgba(255,255,255,0.12)";
+  ctx.lineWidth   = size * 0.018;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.88, 0, Math.PI * 2);
+  ctx.stroke();
 
-  // Raw pixel data: filter byte 0 + RGB per row
-  const rowLen = 1 + size * 3;
-  const raw = Buffer.alloc(size * rowLen);
-  for (let y = 0; y < size; y++) {
-    const off = y * rowLen;
-    raw[off] = 0; // filter type none
-    for (let x = 0; x < size; x++) {
-      raw[off + 1 + x * 3 + 0] = r;
-      raw[off + 1 + x * 3 + 1] = g;
-      raw[off + 1 + x * 3 + 2] = b;
-    }
-  }
+  // White water drop above the text
+  ctx.fillStyle = "white";
+  drawWaterDrop(ctx, cx, cy - size * 0.14, size * 0.115);
 
-  const compressed = deflateSync(raw, { level: 9 });
+  // "SRT" text
+  const fontSize = Math.round(size * 0.265);
+  ctx.font         = `bold ${fontSize}px Arial`;
+  ctx.fillStyle    = "white";
+  ctx.textAlign    = "center";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText("SRT", cx, cy + size * 0.305);
 
-  return Buffer.concat([
-    SIG,
-    chunk("IHDR", ihdr),
-    chunk("IDAT", compressed),
-    chunk("IEND", Buffer.alloc(0)),
-  ]);
+  return canvas.toBuffer("image/png");
 }
 
 for (const size of [192, 512]) {
-  const png = buildPNG(size);
-  const out = createWriteStream(`public/icon-${size}.png`);
-  out.write(png);
-  out.end();
-  console.log(`wrote public/icon-${size}.png (${png.length} bytes)`);
+  const buf = generateIcon(size);
+  writeFileSync(`public/icon-${size}.png`, buf);
+  console.log(`wrote public/icon-${size}.png  (${buf.length} bytes)`);
 }
