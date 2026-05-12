@@ -13,6 +13,8 @@
 import {
   collection,
   addDoc,
+  doc,
+  updateDoc,
   query,
   where,
   orderBy,
@@ -83,6 +85,21 @@ export async function getUserReports(userId) {
     id: docSnapshot.id,
     ...docSnapshot.data(),
   }));
+}
+
+// --- SECTION: Update Report Status (Admin) ---
+
+// Updates a report's status field to "approved" or "rejected".
+// Also records a reviewedAt timestamp so admins can see when the decision was made.
+// Only callable by admins — ProtectedRoute + Firestore rules enforce this.
+//
+// newStatus: "approved" | "rejected" | "pending" (pending allows reverting a decision)
+export async function updateReportStatus(reportId, newStatus) {
+  const reportDocRef = doc(db, "reports", reportId);
+  await updateDoc(reportDocRef, {
+    status:     newStatus,
+    reviewedAt: serverTimestamp(), // server-side timestamp for accurate audit trail
+  });
 }
 
 // --- SECTION: Fetch All Reports (Admin) ---

@@ -1072,6 +1072,319 @@ a {
   line-height: 1.6;
 }
 
+/* --- SECTION: Admin Page --- */
+
+.admin-page {
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+.admin-content {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.admin-page-header {
+  margin-bottom: 1.75rem;
+}
+
+.admin-page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  margin-bottom: 0.25rem;
+}
+
+.admin-page-subtitle {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+/* --- SECTION: Admin Summary Stat Cards --- */
+
+/* Row of 4 compact stat cards (Pending / Approved / Rejected / Total) */
+.admin-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-stat-card {
+  background: var(--color-white);
+  border-radius: var(--radius);
+  padding: 1rem;
+  text-align: center;
+  border-top: 3px solid transparent;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Top border color per status */
+.admin-stat-card.pending  { border-top-color: #6a1b9a; }
+.admin-stat-card.approved { border-top-color: #2e7d32; }
+.admin-stat-card.rejected { border-top-color: #c62828; }
+.admin-stat-card.total    { border-top-color: #1565c0; }
+
+.admin-stat-value {
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+/* Number color per status */
+.admin-stat-card.pending  .admin-stat-value { color: #6a1b9a; }
+.admin-stat-card.approved .admin-stat-value { color: #2e7d32; }
+.admin-stat-card.rejected .admin-stat-value { color: #c62828; }
+.admin-stat-card.total    .admin-stat-value { color: #1565c0; }
+
+.admin-stat-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+
+/* --- SECTION: Filter Tabs --- */
+
+.filter-tabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 2px solid var(--color-border);
+  margin-bottom: 1.25rem;
+}
+
+.filter-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  border: none;
+  background: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: var(--font);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;   /* makes the active tab's border overlap the row border */
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.filter-tab:hover {
+  color: var(--color-text-dark);
+}
+
+/* Active tab — green underline + dark text */
+.filter-tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* Small pill showing the count for each tab */
+.filter-tab-count {
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+
+.filter-tab.active .filter-tab-count {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* --- SECTION: Admin Report Cards --- */
+
+.admin-reports-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.admin-report-card {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-border); /* colored left accent per status */
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  transition: box-shadow 0.2s;
+}
+.admin-report-card:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+/* Left accent color changes based on the report's current status */
+.admin-report-card.status-pending  { border-left-color: #6a1b9a; }
+.admin-report-card.status-approved { border-left-color: #2e7d32; }
+.admin-report-card.status-rejected { border-left-color: #c62828; }
+
+/* Top row: facility name + condition badge on left, action buttons on right */
+.admin-report-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.admin-report-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.admin-report-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+/* Row with facility type, submitter name, and date */
+.admin-report-meta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.admin-meta {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+/* Middle dot separator between meta items */
+.admin-meta-dot {
+  font-size: 0.78rem;
+  color: var(--color-border);
+}
+
+/* Truncated description text */
+.admin-report-description {
+  font-size: 0.82rem;
+  color: var(--color-text-dark);
+  line-height: 1.55;
+  background: var(--color-bg);
+  border-radius: 4px;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.65rem;
+}
+
+/* Bottom row: status badge + GPS tag + review date */
+.admin-report-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* --- SECTION: Admin Status Badges --- */
+
+.admin-status-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.status-pending  { background: #f3e5f5; color: #6a1b9a; border: 1px solid #ce93d8; }
+.status-approved { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+.status-rejected { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+
+/* Small tag for GPS / No GPS indicator */
+.admin-footer-tag {
+  font-size: 0.72rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.gps-yes { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+.gps-no  { background: #f5f5f5; color: #9e9e9e; border: 1px solid #e0e0e0; }
+
+/* --- SECTION: Admin Action Buttons --- */
+
+.admin-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;  /* prevents buttons being squashed on narrow screens */
+}
+
+/* Base style shared by approve and reject buttons */
+.btn-approve,
+.btn-reject {
+  padding: 0.35rem 0.8rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+.btn-approve:disabled,
+.btn-reject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-approve {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+.btn-approve:hover:not(:disabled) {
+  background: #c8e6c9;
+}
+
+.btn-reject {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+}
+.btn-reject:hover:not(:disabled) {
+  background: #ffcdd2;
+}
+
+/* --- SECTION: Admin Empty & Loading States --- */
+
+.admin-loading {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  padding: 1rem 0;
+}
+
+.admin-empty {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: var(--color-white);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+}
+
+.admin-empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.admin-empty-text {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
 /* --- SECTION: Responsive --- */
 
 @media (max-width: 640px) {
@@ -1101,5 +1414,16 @@ a {
   /* Stat cards: 2 per row on small screens */
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Admin stat cards: 2 per row on mobile */
+  .admin-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Stack action buttons below the facility name on narrow screens */
+  .admin-report-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
