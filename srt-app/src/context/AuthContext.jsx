@@ -37,11 +37,22 @@ export function AuthProvider({ children }) {
     return unsub;
   }, []);
 
-  // Block rendering until Firebase resolves the saved session — prevents a flash of /login
   if (isLoading) {
     return (
-      <div style={{ padding: "2rem", textAlign: "center", fontFamily: "sans-serif" }}>
-        Loading Sanitation Resilience Tracker...
+      <div className="app-splash">
+        <div className="app-splash-icon">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="46" fill="#1a6b2e"/>
+            <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5"/>
+            <path d="M50,20 C55.5,26.5 61,34 61,40 A11,11 0 0,1 39,40 C39,34 44.5,26.5 50,20 Z" fill="white"/>
+            <text x="50" y="72" fontFamily="Arial,Helvetica,sans-serif" fontWeight="bold" fontSize="26" fill="white" textAnchor="middle">SRT</text>
+          </svg>
+        </div>
+        <h1 className="app-splash-title">Sanitation Resilience Tracker</h1>
+        <p className="app-splash-sub">Northern Ghana · UNICEF StartUp Lab 2026</p>
+        <div className="app-splash-bar">
+          <div className="app-splash-bar-fill" />
+        </div>
       </div>
     );
   }
