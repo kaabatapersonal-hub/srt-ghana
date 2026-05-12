@@ -1,0 +1,357 @@
+/* index.css
+   Global styles for the Sanitation Resilience Tracker.
+   All CSS variables (colors, shadows, spacing) are defined here so every
+   component uses the same design system. Import this file only in main.jsx. */
+
+/* --- SECTION: Design Tokens (CSS Variables) --- */
+
+:root {
+  --color-primary:        #2e7d32;   /* dark green — health, environment */
+  --color-primary-hover:  #1b5e20;   /* darker green for hover states */
+  --color-primary-light:  #e8f5e9;   /* pale green for badges and backgrounds */
+  --color-blue:           #1565c0;   /* deep blue — water/sanitation */
+  --color-error:          #c62828;   /* red for error messages */
+  --color-error-light:    #ffebee;   /* pale red for error backgrounds */
+  --color-warning:        #e65100;   /* orange for warnings */
+  --color-text-dark:      #212121;
+  --color-text-muted:     #757575;
+  --color-bg:             #f5f5f5;
+  --color-white:          #ffffff;
+  --color-border:         #e0e0e0;
+  --shadow-sm:            0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md:            0 4px 12px rgba(0, 0, 0, 0.15);
+  --radius:               8px;
+  --font:                 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* --- SECTION: Global Reset --- */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  background: var(--color-bg);
+  color: var(--color-text-dark);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--color-primary);
+}
+
+/* --- SECTION: Auth Pages (Login & Register) --- */
+
+/* Full-screen green background for auth pages */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  padding: 1rem;
+}
+
+/* White card in the center of the auth page */
+.auth-card {
+  background: var(--color-white);
+  border-radius: 12px;
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow-md);
+}
+
+/* App logo/name area at the top of the auth card */
+.auth-logo {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+.auth-logo-title {
+  color: var(--color-primary);
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.auth-logo-subtitle {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+/* Heading inside the card (e.g. "Sign in to your account") */
+.auth-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  margin-bottom: 1.5rem;
+}
+
+/* --- SECTION: Form Elements --- */
+
+.form-group {
+  margin-bottom: 1.1rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-dark);
+  margin-bottom: 0.4rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-family: var(--font);
+  transition: border-color 0.2s;
+  outline: none;
+  background: var(--color-white);
+  color: var(--color-text-dark);
+}
+
+.form-input:focus {
+  border-color: var(--color-primary);
+}
+
+/* --- SECTION: Buttons --- */
+
+/* Full-width primary action button */
+.btn-primary {
+  width: 100%;
+  padding: 0.85rem;
+  background: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 0.5rem;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* --- SECTION: Error & Status Messages --- */
+
+.error-message {
+  background: var(--color-error-light);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  margin-bottom: 1.2rem;
+}
+
+/* --- SECTION: Auth Link (e.g. "Don't have an account? Register") --- */
+
+.auth-switch-text {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin-top: 1.25rem;
+}
+.auth-switch-text a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+.auth-switch-text a:hover {
+  text-decoration: underline;
+}
+
+/* --- SECTION: Navbar --- */
+
+.navbar {
+  background: var(--color-primary);
+  padding: 0 1.5rem;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 100; /* keeps navbar above map tiles and other content */
+}
+
+.navbar-brand {
+  color: var(--color-white);
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+}
+
+/* Right side of the navbar — links + user info + logout */
+.navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Individual nav link */
+.navbar-link {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: background 0.2s, color 0.2s;
+}
+.navbar-link:hover {
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.15);
+}
+/* React Router adds the "active" class to the current page's NavLink */
+.navbar-link.active {
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.2);
+  font-weight: 600;
+}
+
+/* Admin link gets a warm color to stand out */
+.navbar-link.admin-link {
+  color: #ffcc80;
+}
+.navbar-link.admin-link:hover {
+  color: #ffe0b2;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Separator between nav links and user info */
+.navbar-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 0 0.5rem;
+}
+
+.navbar-user-email {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.8rem;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar-logout-btn {
+  color: var(--color-white);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0.35rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-left: 0.25rem;
+}
+.navbar-logout-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* --- SECTION: Dashboard Page Layout --- */
+
+.dashboard-page {
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+.dashboard-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.dashboard-header {
+  margin-bottom: 2rem;
+}
+
+.dashboard-greeting {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  margin-bottom: 0.35rem;
+}
+
+.dashboard-subtext {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+/* Admin role badge shown next to the user's name */
+.role-badge {
+  display: inline-block;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  border: 1px solid var(--color-primary);
+  margin-left: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
+
+/* Placeholder card used until full dashboard is built */
+.placeholder-card {
+  background: var(--color-white);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+/* --- SECTION: Responsive --- */
+
+@media (max-width: 640px) {
+  .auth-card {
+    padding: 1.75rem 1.25rem;
+  }
+
+  /* Hide email on small screens to save space in navbar */
+  .navbar-user-email {
+    display: none;
+  }
+
+  .navbar-link {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.82rem;
+  }
+
+  .dashboard-content {
+    padding: 1.25rem 1rem;
+  }
+}
