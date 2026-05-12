@@ -1817,6 +1817,41 @@ a {
   color: white;
 }
 
+/* Vertical separator between condition filters and climate risk toggle */
+.map-filter-divider {
+  width: 1px;
+  background: var(--color-border);
+  align-self: stretch;
+  margin: 0 0.25rem;
+  flex-shrink: 0;
+}
+
+/* Flood risk toggle — orange/red theme to signal climate hazard */
+.map-flood-toggle {
+  border-color: #ffab91;
+  color: #bf360c;
+}
+.map-flood-toggle.active {
+  background: #e64a19;
+  border-color: #e64a19;
+  color: white;
+}
+
+/* Leaflet tooltip for flood zone polygons */
+.flood-zone-tooltip {
+  background: rgba(183, 28, 28, 0.92);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  padding: 0.5rem 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+.flood-zone-tooltip::before {
+  display: none;
+}
+
 /* ============================================================
    SECTION: Map Page Body (map + sidebar flex row)
    ============================================================ */

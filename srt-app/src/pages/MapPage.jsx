@@ -11,14 +11,15 @@
 // Route: /map (protected — requires login)
 
 import React, { useState } from "react";
-import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Popup, GeoJSON } from "react-leaflet";
 import { useReports } from "../hooks/useReports";
 import Navbar from "../components/Navbar";
 import ConditionBadge from "../components/ConditionBadge";
 
 // --- SECTION: Constants ---
 
-const NORTHERN_GHANA_CENTER = [10.0, -1.0];
+// Tamale is the capital of Northern Ghana — a better default center than the old midpoint
+const NORTHERN_GHANA_CENTER = [9.4034, -0.8424];
 const INITIAL_ZOOM = 8;
 
 const CONDITION_MARKER_COLORS = {
@@ -45,6 +46,75 @@ const FILTER_OPTIONS = [
   { value: "poor",     label: "Poor" },
   { value: "critical", label: "Critical" },
 ];
+
+// --- SECTION: Flood Zone GeoJSON ---
+
+// Static GeoJSON polygons for known flood-prone districts in Northern Ghana.
+// Coordinates are approximate district boundaries in [longitude, latitude] order
+// (standard GeoJSON format — note: opposite of Leaflet's [lat, lng]).
+// Sources: NADMO flood reports, OCHA Northern Ghana flood assessments.
+const FLOOD_ZONES_GEOJSON = {
+  type: "FeatureCollection",
+  features: [
+    {
+      type: "Feature",
+      properties: {
+        name:      "Tolon District",
+        risk:      "High",
+        note:      "White Volta River floodplain — regularly inundated during peak rains",
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[
+          [-1.28, 9.18], [-0.92, 9.18], [-0.90, 9.35],
+          [-0.93, 9.50], [-1.10, 9.54], [-1.28, 9.48],
+          [-1.28, 9.18],
+        ]],
+      },
+    },
+    {
+      type: "Feature",
+      properties: {
+        name: "Kumbungu District",
+        risk: "High",
+        note: "Low-lying terrain between White Volta tributaries",
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[
+          [-1.18, 9.54], [-0.93, 9.50], [-0.88, 9.62],
+          [-0.90, 9.85], [-1.15, 9.85], [-1.22, 9.68],
+          [-1.18, 9.54],
+        ]],
+      },
+    },
+    {
+      type: "Feature",
+      properties: {
+        name: "Savelugu District",
+        risk: "Moderate–High",
+        note: "North of Tamale — seasonal flooding from overland flow",
+      },
+      geometry: {
+        type: "Polygon",
+        coordinates: [[
+          [-0.93, 9.50], [-0.65, 9.50], [-0.60, 9.63],
+          [-0.65, 9.88], [-0.88, 9.90], [-0.93, 9.72],
+          [-0.90, 9.62], [-0.93, 9.50],
+        ]],
+      },
+    },
+  ],
+};
+
+// Leaflet style object applied to every flood zone polygon
+const FLOOD_ZONE_STYLE = {
+  fillColor:   "#e53935",
+  fillOpacity: 0.22,
+  color:       "#b71c1c",
+  weight:      2,
+  dashArray:   "6 4",
+};
 
 // --- SECTION: Helpers ---
 
@@ -143,7 +213,8 @@ function MapSidebar({ reports }) {
 
 function MapPage() {
   const { reports, isLoading, error } = useReports(100);
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [activeFilter,    setActiveFilter]    = useState("all");
+  const [showFloodZones,  setShowFloodZones]  = useState(false);
 
   // All reports that have valid GPS coordinates
   const locatedReports = reports.filter(
@@ -180,6 +251,18 @@ function MapPage() {
             </button>
           );
         })}
+
+        {/* Divider separating condition filters from the climate risk toggle */}
+        <div className="map-filter-divider" />
+
+        {/* Climate risk toggle — overlays flood-prone district polygons */}
+        <button
+          className={`map-filter-btn map-flood-toggle ${showFloodZones ? "active" : ""}`}
+          onClick={() => setShowFloodZones((prev) => !prev)}
+          title="Toggle flood-risk zone overlay for Northern Ghana districts"
+        >
+          🌊 Flood Risk
+        </button>
       </div>
 
       {/* --- SECTION: Map + Sidebar layout --- */}
@@ -196,6 +279,23 @@ function MapPage() {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+
+            {/* Flood zone overlay — rendered below facility markers so markers stay on top */}
+            {showFloodZones && (
+              <GeoJSON
+                key="flood-zones"
+                data={FLOOD_ZONES_GEOJSON}
+                style={FLOOD_ZONE_STYLE}
+                onEachFeature={(feature, layer) => {
+                  layer.bindTooltip(
+                    `<strong>${feature.properties.name}</strong><br/>
+                     Risk: ${feature.properties.risk}<br/>
+                     <em>${feature.properties.note}</em>`,
+                    { sticky: true, className: "flood-zone-tooltip" }
+                  );
+                }}
+              />
+            )}
 
             {/* One marker per filtered report */}
             {filteredReports.map((report) => {
