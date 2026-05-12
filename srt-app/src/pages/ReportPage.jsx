@@ -1,17 +1,3 @@
-// ReportPage.jsx
-// Multi-step report submission form for field agents.
-// Broken into 4 focused steps so agents are not overwhelmed by one long form —
-// especially important on a small phone screen in the field.
-//
-// Steps:
-//   1. Facility Details  — name and type
-//   2. Condition         — color-coded tap cards
-//   3. Notes & Location  — description text + optional GPS capture
-//   4. Review & Submit   — summary of all entries before final submission
-//
-// After submission: animated success screen with report reference ID.
-// Route: /report (protected — requires login)
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -20,8 +6,6 @@ import Navbar from "../components/Navbar";
 import StepIndicator from "../components/StepIndicator";
 import ConditionBadge from "../components/ConditionBadge";
 import Footer from "../components/Footer";
-
-// --- SECTION: Form Constants ---
 
 const STEPS = [
   { id: 1, label: "Facility Details" },
@@ -46,7 +30,6 @@ const CONDITION_OPTIONS = [
   { value: "critical", label: "Critical", colorClass: "critical", description: "Non-functional or poses health risk" },
 ];
 
-// Human-readable label for the review step
 const FACILITY_TYPE_LABELS = {
   borehole:        "Borehole / Hand Pump",
   latrine:         "Latrine / Toilet Block",
@@ -56,13 +39,9 @@ const FACILITY_TYPE_LABELS = {
   solid_waste:     "Solid Waste Disposal Site",
 };
 
-// --- SECTION: Main ReportPage Component ---
-
 function ReportPage() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-
-  // --- SECTION: Form State ---
 
   const [currentStep,     setCurrentStep]     = useState(1);
   const [facilityName,    setFacilityName]    = useState("");
@@ -77,10 +56,7 @@ function ReportPage() {
   const [submitSuccess,   setSubmitSuccess]   = useState(false);
   const [submittedDocId,  setSubmittedDocId]  = useState("");
 
-  // --- SECTION: Step Validation ---
-
-  // Validates the current step's fields before allowing the user to advance
-  function validateCurrentStep() {
+  function validateStep() {
     switch (currentStep) {
       case 1:
         if (!facilityName.trim()) return "Please enter the facility name.";
@@ -98,24 +74,17 @@ function ReportPage() {
     }
   }
 
-  // --- SECTION: Step Navigation ---
-
   function goToNextStep() {
-    const error = validateCurrentStep();
-    if (error) {
-      setStepError(error);
-      return;
-    }
+    const err = validateStep();
+    if (err) { setStepError(err); return; }
     setStepError("");
-    setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
+    setCurrentStep(prev => Math.min(prev + 1, STEPS.length));
   }
 
   function goToPrevStep() {
     setStepError("");
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    setCurrentStep(prev => Math.max(prev - 1, 1));
   }
-
-  // --- SECTION: GPS Capture ---
 
   function handleCaptureGps() {
     if (!navigator.geolocation) {
@@ -127,41 +96,39 @@ function ReportPage() {
     setGpsLocation(null);
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      (pos) => {
         setGpsLocation({
-          latitude:  parseFloat(position.coords.latitude.toFixed(6)),
-          longitude: parseFloat(position.coords.longitude.toFixed(6)),
-          accuracy:  Math.round(position.coords.accuracy),
+          latitude:  parseFloat(pos.coords.latitude.toFixed(6)),
+          longitude: parseFloat(pos.coords.longitude.toFixed(6)),
+          accuracy:  Math.round(pos.coords.accuracy),
         });
         setIsCapturingGps(false);
       },
-      (error) => {
+      (err) => {
+        // Browser passes a numeric code — map it to something readable
         const msgs = {
           1: "Location access denied. Please allow permission and try again.",
           2: "Unable to determine location. Make sure GPS is enabled.",
           3: "Location request timed out. Please try again.",
         };
-        setGpsError(msgs[error.code] || "Could not get location.");
+        setGpsError(msgs[err.code] || "Could not get location.");
         setIsCapturingGps(false);
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   }
 
-  // --- SECTION: Form Submission ---
-
   async function handleSubmit() {
     setIsSubmitting(true);
     setStepError("");
     try {
-      const reportData = {
+      const newId = await submitReport({
         facilityName:    facilityName.trim(),
         facilityType,
         conditionStatus,
         description:     description.trim(),
         location:        gpsLocation,
-      };
-      const newId = await submitReport(reportData, currentUser);
+      }, currentUser);
       setSubmittedDocId(newId);
       setSubmitSuccess(true);
     } catch (err) {
@@ -172,7 +139,6 @@ function ReportPage() {
     }
   }
 
-  // Resets all state so the agent can submit another report immediately
   function handleSubmitAnother() {
     setCurrentStep(1);
     setFacilityName("");
@@ -186,15 +152,12 @@ function ReportPage() {
     setSubmittedDocId("");
   }
 
-  // --- SECTION: Success Screen ---
-
   if (submitSuccess) {
     return (
       <div className="report-page page-fade-in">
         <Navbar />
         <div className="report-content">
           <div className="report-success-card">
-            {/* Animated checkmark circle */}
             <div className="success-icon-circle">
               <span className="success-check">✓</span>
             </div>
@@ -224,8 +187,6 @@ function ReportPage() {
     );
   }
 
-  // --- SECTION: Multi-Step Form ---
-
   return (
     <div className="report-page page-fade-in">
       <Navbar />
@@ -236,17 +197,15 @@ function ReportPage() {
           Record the current condition of a sanitation facility in Northern Ghana.
         </p>
 
-        {/* Progress indicator at the top */}
         <StepIndicator steps={STEPS} currentStep={currentStep} />
 
-        {/* Per-step validation error */}
         {stepError && (
           <div className="error-message" role="alert" style={{ marginBottom: "1rem" }}>
             {stepError}
           </div>
         )}
 
-        {/* ---- STEP 1: Facility Details ---- */}
+        {/* step 1 */}
         {currentStep === 1 && (
           <div className="form-section page-fade-in">
             <p className="form-section-title">Step 1 — Facility Details</p>
@@ -259,7 +218,7 @@ function ReportPage() {
                 className="form-input"
                 placeholder="e.g. Bolgatanga Borehole 3"
                 value={facilityName}
-                onChange={(e) => setFacilityName(e.target.value)}
+                onChange={e => setFacilityName(e.target.value)}
                 autoFocus
               />
             </div>
@@ -270,10 +229,10 @@ function ReportPage() {
                 id="facility-type"
                 className="form-input"
                 value={facilityType}
-                onChange={(e) => setFacilityType(e.target.value)}
+                onChange={e => setFacilityType(e.target.value)}
               >
                 <option value="">— Select a type —</option>
-                {FACILITY_TYPES.map((t) => (
+                {FACILITY_TYPES.map(t => (
                   <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
               </select>
@@ -281,30 +240,30 @@ function ReportPage() {
           </div>
         )}
 
-        {/* ---- STEP 2: Condition ---- */}
+        {/* step 2 */}
         {currentStep === 2 && (
           <div className="form-section page-fade-in">
             <p className="form-section-title">Step 2 — Condition Assessment</p>
             <div className="condition-grid">
-              {CONDITION_OPTIONS.map((option) => (
+              {CONDITION_OPTIONS.map(opt => (
                 <div
-                  key={option.value}
-                  className={`condition-card ${option.colorClass} ${conditionStatus === option.value ? "selected" : ""}`}
-                  onClick={() => setConditionStatus(option.value)}
+                  key={opt.value}
+                  className={`condition-card ${opt.colorClass} ${conditionStatus === opt.value ? "selected" : ""}`}
+                  onClick={() => setConditionStatus(opt.value)}
                   role="radio"
-                  aria-checked={conditionStatus === option.value}
+                  aria-checked={conditionStatus === opt.value}
                   tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setConditionStatus(option.value); }}
+                  onKeyDown={e => { if (e.key === "Enter" || e.key === " ") setConditionStatus(opt.value); }}
                 >
-                  <div className="condition-card-label">{option.label}</div>
-                  <div className="condition-card-desc">{option.description}</div>
+                  <div className="condition-card-label">{opt.label}</div>
+                  <div className="condition-card-desc">{opt.description}</div>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* ---- STEP 3: Notes & Location ---- */}
+        {/* step 3 */}
         {currentStep === 3 && (
           <div className="form-section page-fade-in">
             <p className="form-section-title">Step 3 — Notes &amp; Location</p>
@@ -316,7 +275,7 @@ function ReportPage() {
                 className="form-textarea"
                 placeholder="Describe what you observed — e.g. pump handle broken, water not flowing, pit nearly full..."
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={e => setDescription(e.target.value)}
               />
               <p className={`char-count ${description.trim().length < 20 && description.length > 0 ? "too-short" : ""}`}>
                 {description.trim().length} / 20 minimum characters
@@ -346,7 +305,7 @@ function ReportPage() {
           </div>
         )}
 
-        {/* ---- STEP 4: Review & Submit ---- */}
+        {/* step 4 — review before submitting */}
         {currentStep === 4 && (
           <div className="form-section page-fade-in">
             <p className="form-section-title">Step 4 — Review &amp; Submit</p>
@@ -383,7 +342,6 @@ function ReportPage() {
           </div>
         )}
 
-        {/* ---- SECTION: Navigation Buttons ---- */}
         <div className="step-nav-row">
           {currentStep > 1 && (
             <button
@@ -397,11 +355,7 @@ function ReportPage() {
           )}
 
           {currentStep < STEPS.length ? (
-            <button
-              type="button"
-              className="step-nav-btn next"
-              onClick={goToNextStep}
-            >
+            <button type="button" className="step-nav-btn next" onClick={goToNextStep}>
               Next →
             </button>
           ) : (
@@ -415,7 +369,6 @@ function ReportPage() {
             </button>
           )}
         </div>
-
       </div>
 
       <Footer />

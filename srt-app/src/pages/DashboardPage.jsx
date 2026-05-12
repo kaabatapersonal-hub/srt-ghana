@@ -1,15 +1,3 @@
-// DashboardPage.jsx
-// Main dashboard for logged-in users. Shows live Firestore stats, a condition
-// donut chart, a system status banner, and a recent reports list.
-//
-// Admin view: all system stats + all recent reports.
-// User view:  personal stats + their own recent reports + system total note.
-//
-// Uses recharts PieChart for the condition breakdown donut chart.
-// All data comes from the useReports real-time hook — no extra Firestore reads.
-//
-// Route: /dashboard (protected — requires login)
-
 import React from "react";
 import { Link } from "react-router-dom";
 import {
@@ -21,9 +9,7 @@ import Navbar from "../components/Navbar";
 import ConditionBadge from "../components/ConditionBadge";
 import Footer from "../components/Footer";
 
-// --- SECTION: Constants ---
-
-// Colors used both in the donut chart slices and the stat cards
+// same colors used for chart slices and stat card accents
 const CONDITION_COLORS = {
   good:     "#2e7d32",
   fair:     "#f57c00",
@@ -40,16 +26,12 @@ const FACILITY_TYPE_LABELS = {
   solid_waste:     "Solid Waste Site",
 };
 
-// --- SECTION: Helpers ---
-
-function formatDate(ts) {
+const formatDate = (ts) => {
   if (!ts || !ts.toDate) return "Just now";
   return new Intl.DateTimeFormat("en-GB", {
     day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
   }).format(ts.toDate());
-}
-
-// --- SECTION: StatCard Sub-Component ---
+};
 
 function StatCard({ value, label, colorClass }) {
   return (
@@ -60,9 +42,6 @@ function StatCard({ value, label, colorClass }) {
   );
 }
 
-// --- SECTION: Skeleton Loader Sub-Component ---
-
-// Shown while Firestore is loading — prevents blank/janky screens
 function DashboardSkeleton() {
   return (
     <div className="dashboard-skeleton">
@@ -79,8 +58,6 @@ function DashboardSkeleton() {
     </div>
   );
 }
-
-// --- SECTION: ReportRow Sub-Component ---
 
 function ReportRow({ report, showSubmitter }) {
   const typeLabel = FACILITY_TYPE_LABELS[report.facilityType] || report.facilityType;
@@ -104,18 +81,14 @@ function ReportRow({ report, showSubmitter }) {
   );
 }
 
-// --- SECTION: Condition Donut Chart Sub-Component ---
-
-// Recharts PieChart rendered as a donut showing condition breakdown
 function ConditionDonutChart({ stats }) {
   const chartData = [
     { name: "Good",     value: stats.good,     color: CONDITION_COLORS.good },
     { name: "Fair",     value: stats.fair,     color: CONDITION_COLORS.fair },
     { name: "Poor",     value: stats.poor,     color: CONDITION_COLORS.poor },
     { name: "Critical", value: stats.critical, color: CONDITION_COLORS.critical },
-  ].filter((d) => d.value > 0); // hide slices with 0 value
+  ].filter(d => d.value > 0);
 
-  // Show a message if there's no data to chart yet
   if (chartData.length === 0) {
     return (
       <div className="chart-empty">
@@ -129,95 +102,78 @@ function ConditionDonutChart({ stats }) {
       <PieChart>
         <Pie
           data={chartData}
-          cx="50%"
-          cy="50%"
-          innerRadius={60}    // the gap in the middle makes it a donut
-          outerRadius={88}
-          paddingAngle={3}    // small gap between slices for clarity
+          cx="50%" cy="50%"
+          innerRadius={60} outerRadius={88}
+          paddingAngle={3}
           dataKey="value"
         >
-          {chartData.map((entry, index) => (
-            <Cell key={index} fill={entry.color} stroke="none" />
+          {chartData.map((entry, i) => (
+            <Cell key={i} fill={entry.color} stroke="none" />
           ))}
         </Pie>
         <Tooltip formatter={(value, name) => [`${value} reports`, name]} />
         <Legend
           iconType="circle"
           iconSize={10}
-          formatter={(value) => (
-            <span style={{ fontSize: "0.8rem", color: "#757575" }}>{value}</span>
-          )}
+          formatter={v => <span style={{ fontSize: "0.8rem", color: "#757575" }}>{v}</span>}
         />
       </PieChart>
     </ResponsiveContainer>
   );
 }
 
-// --- SECTION: System Status Banner Sub-Component ---
-
-// Shows a colored alert banner telling admins how many reports need review
 function SystemStatusBanner({ pendingCount }) {
   if (pendingCount === 0) {
-    return (
-      <div className="status-banner green">
-        ✅ All reports reviewed — no pending submissions.
-      </div>
-    );
+    return <div className="status-banner green">✅ All reports reviewed — no pending submissions.</div>;
   }
-  const urgencyClass = pendingCount > 5 ? "red" : "amber";
+  const cls = pendingCount > 5 ? "red" : "amber";
   return (
-    <div className={`status-banner ${urgencyClass}`}>
+    <div className={`status-banner ${cls}`}>
       ⚠️ {pendingCount} report{pendingCount !== 1 ? "s" : ""} pending admin review.
       {pendingCount > 5 && " Action required."}
     </div>
   );
 }
 
-// --- SECTION: Main DashboardPage Component ---
-
 function DashboardPage() {
   const { currentUser, isAdmin } = useAuth();
   const { reports, isLoading, error } = useReports(100);
 
-  const userGreetingName = currentUser?.displayName || currentUser?.email;
-
-  // --- SECTION: Compute Stats ---
+  const name = currentUser?.displayName || currentUser?.email;
 
   const systemStats = {
     total:    reports.length,
-    good:     reports.filter((r) => r.conditionStatus === "good").length,
-    fair:     reports.filter((r) => r.conditionStatus === "fair").length,
-    poor:     reports.filter((r) => r.conditionStatus === "poor").length,
-    critical: reports.filter((r) => r.conditionStatus === "critical").length,
-    pending:  reports.filter((r) => r.status === "pending").length,
+    good:     reports.filter(r => r.conditionStatus === "good").length,
+    fair:     reports.filter(r => r.conditionStatus === "fair").length,
+    poor:     reports.filter(r => r.conditionStatus === "poor").length,
+    critical: reports.filter(r => r.conditionStatus === "critical").length,
+    pending:  reports.filter(r => r.status === "pending").length,
   };
 
-  const myReports = reports.filter((r) => r.submittedBy?.uid === currentUser?.uid);
+  // console.log('stats:', systemStats);
+
+  const myReports = reports.filter(r => r.submittedBy?.uid === currentUser?.uid);
   const myStats = {
     total:    myReports.length,
-    good:     myReports.filter((r) => r.conditionStatus === "good").length,
-    fair:     myReports.filter((r) => r.conditionStatus === "fair").length,
-    poor:     myReports.filter((r) => r.conditionStatus === "poor").length,
-    critical: myReports.filter((r) => r.conditionStatus === "critical").length,
-    pending:  myReports.filter((r) => r.status === "pending").length,
+    good:     myReports.filter(r => r.conditionStatus === "good").length,
+    fair:     myReports.filter(r => r.conditionStatus === "fair").length,
+    poor:     myReports.filter(r => r.conditionStatus === "poor").length,
+    critical: myReports.filter(r => r.conditionStatus === "critical").length,
+    pending:  myReports.filter(r => r.status === "pending").length,
   };
 
   const displayStats  = isAdmin ? systemStats : myStats;
   const statsLabel    = isAdmin ? "System Overview" : "My Reports";
   const recentReports = isAdmin ? reports.slice(0, 10) : myReports.slice(0, 5);
 
-  // --- SECTION: Render ---
-
   return (
     <div className="dashboard-page page-fade-in">
       <Navbar />
 
       <div className="dashboard-content">
-
-        {/* Welcome header */}
         <div className="dashboard-header">
           <h2 className="dashboard-greeting">
-            Welcome back, {userGreetingName}
+            Welcome back, {name}
             {isAdmin && <span className="role-badge">Admin</span>}
           </h2>
           <p className="dashboard-subtext">Sanitation Resilience Tracker — Northern Ghana</p>
@@ -229,10 +185,8 @@ function DashboardPage() {
           <DashboardSkeleton />
         ) : (
           <>
-            {/* --- SECTION: System Status Banner --- */}
             <SystemStatusBanner pendingCount={systemStats.pending} />
 
-            {/* --- SECTION: Stat Cards --- */}
             <p className="section-eyebrow" style={{ marginTop: "1.5rem" }}>{statsLabel}</p>
             <div className="stats-grid">
               <StatCard value={displayStats.total}    label="Total Reports"  colorClass="stat-blue"   />
@@ -250,10 +204,7 @@ function DashboardPage() {
               </p>
             )}
 
-            {/* --- SECTION: Chart + Reports Columns --- */}
             <div className="dashboard-columns" style={{ marginTop: "1.5rem" }}>
-
-              {/* Left: Recent reports list */}
               <div className="dashboard-column-main">
                 <div className="section-header">
                   <h3 className="section-title">
@@ -269,17 +220,14 @@ function DashboardPage() {
                   </div>
                 ) : (
                   <div className="reports-list">
-                    {recentReports.map((r) => (
+                    {recentReports.map(r => (
                       <ReportRow key={r.id} report={r} showSubmitter={isAdmin} />
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Right: Donut chart + quick actions + legend */}
               <div className="dashboard-column-side">
-
-                {/* Condition breakdown donut chart */}
                 <div className="section-header">
                   <h3 className="section-title">Condition Breakdown</h3>
                 </div>
@@ -287,7 +235,6 @@ function DashboardPage() {
                   <ConditionDonutChart stats={isAdmin ? systemStats : myStats} />
                 </div>
 
-                {/* Quick actions */}
                 <div className="section-header" style={{ marginTop: "1.25rem" }}>
                   <h3 className="section-title">Quick Actions</h3>
                 </div>
@@ -299,7 +246,6 @@ function DashboardPage() {
                   )}
                 </div>
               </div>
-
             </div>
           </>
         )}

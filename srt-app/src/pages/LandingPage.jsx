@@ -1,26 +1,9 @@
-// LandingPage.jsx
-// The public-facing homepage of the Sanitation Resilience Tracker.
-// Visible to everyone — logged-in users see "Go to Dashboard" CTAs,
-// logged-out users see "Get Started" and "Sign In" CTAs.
-//
-// Sections:
-//   1. Landing Navbar   — app name + auth/dashboard links
-//   2. Hero             — headline, description, CTA buttons
-//   3. Live Impact Stats — total reports, facilities monitored, field agents (from Firestore)
-//   4. Features         — 3 feature highlight cards
-//   5. Footer           — hackathon attribution
-//
-// Route: / (public — no auth required)
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useReports } from "../hooks/useReports";
 import Footer from "../components/Footer";
 
-// --- SECTION: Feature Cards Data ---
-
-// The three key capabilities shown in the features section
 const FEATURES = [
   {
     icon: "📡",
@@ -42,21 +25,13 @@ const FEATURES = [
   },
 ];
 
-// --- SECTION: Landing Navbar ---
-
-// Separate from the main app Navbar — shows login/register links for guests,
-// and a "Dashboard" link for users who are already logged in.
 function LandingNavbar({ currentUser }) {
   return (
     <nav className="landing-navbar">
       <div className="landing-navbar-inner">
-        {/* App brand name */}
         <Link to="/" className="landing-brand">SRT</Link>
-
-        {/* Right side — adapts based on login state */}
         <div className="landing-nav-links">
           {currentUser ? (
-            // Logged-in users go straight to the dashboard
             <Link to="/dashboard" className="landing-nav-btn primary">Dashboard</Link>
           ) : (
             <>
@@ -70,53 +45,31 @@ function LandingNavbar({ currentUser }) {
   );
 }
 
-// --- SECTION: Impact Stat Card ---
-
-// Displays a single live metric (number + label) in the hero section
 function ImpactStatCard({ value, label, isLoading }) {
   return (
     <div className="impact-stat-card">
       <div className="impact-stat-value">
-        {isLoading ? (
-          <span className="skeleton skeleton-stat-value" />
-        ) : (
-          value
-        )}
+        {isLoading ? <span className="skeleton skeleton-stat-value" /> : value}
       </div>
       <div className="impact-stat-label">{label}</div>
     </div>
   );
 }
 
-// --- SECTION: Main LandingPage Component ---
-
 function LandingPage() {
   const { currentUser } = useAuth();
   const { reports, isLoading } = useReports(100);
 
-  // --- SECTION: Compute Live Impact Metrics ---
-
-  // Total reports ever submitted
   const totalReports = reports.length;
-
-  // Count unique facility names to estimate facilities being monitored
-  const uniqueFacilityNames = new Set(reports.map((r) => r.facilityName?.toLowerCase().trim()));
-  const facilitiesMonitored = uniqueFacilityNames.size;
-
-  // Count unique field agents (unique submitter UIDs)
-  const uniqueAgentUids = new Set(reports.map((r) => r.submittedBy?.uid).filter(Boolean));
-  const fieldAgentsActive = uniqueAgentUids.size;
+  const facilitiesMonitored = new Set(reports.map(r => r.facilityName?.toLowerCase().trim())).size;
+  const fieldAgentsActive = new Set(reports.map(r => r.submittedBy?.uid).filter(Boolean)).size;
 
   return (
     <div className="landing-page page-fade-in">
-
-      {/* --- SECTION: Navbar --- */}
       <LandingNavbar currentUser={currentUser} />
 
-      {/* --- SECTION: Hero --- */}
       <section className="landing-hero">
         <div className="hero-inner">
-
           <div className="hero-badge">UNICEF StartUp Lab Hackathon 2026</div>
 
           <h1 className="hero-headline">
@@ -130,7 +83,6 @@ function LandingPage() {
             governments and WASH programs respond faster to communities in need.
           </p>
 
-          {/* CTA buttons — adapt to login state */}
           <div className="hero-cta-row">
             {currentUser ? (
               <>
@@ -145,28 +97,14 @@ function LandingPage() {
             )}
           </div>
 
-          {/* --- SECTION: Live Impact Stats --- */}
           <div className="impact-stats-row">
-            <ImpactStatCard
-              value={totalReports}
-              label="Reports Submitted"
-              isLoading={isLoading}
-            />
-            <ImpactStatCard
-              value={facilitiesMonitored}
-              label="Facilities Monitored"
-              isLoading={isLoading}
-            />
-            <ImpactStatCard
-              value={fieldAgentsActive}
-              label="Field Agents Active"
-              isLoading={isLoading}
-            />
+            <ImpactStatCard value={totalReports}        label="Reports Submitted"   isLoading={isLoading} />
+            <ImpactStatCard value={facilitiesMonitored} label="Facilities Monitored" isLoading={isLoading} />
+            <ImpactStatCard value={fieldAgentsActive}   label="Field Agents Active"  isLoading={isLoading} />
           </div>
         </div>
       </section>
 
-      {/* --- SECTION: Features --- */}
       <section className="landing-features">
         <div className="features-inner">
           <h2 className="features-title">Built for the Field</h2>
@@ -174,20 +112,18 @@ function LandingPage() {
             Designed for low-connectivity areas where field agents need tools
             that work on any device, even offline.
           </p>
-
           <div className="features-grid">
-            {FEATURES.map((feature) => (
-              <div key={feature.title} className="feature-card">
-                <div className="feature-icon">{feature.icon}</div>
-                <h3 className="feature-title">{feature.title}</h3>
-                <p className="feature-description">{feature.description}</p>
+            {FEATURES.map(f => (
+              <div key={f.title} className="feature-card">
+                <div className="feature-icon">{f.icon}</div>
+                <h3 className="feature-title">{f.title}</h3>
+                <p className="feature-description">{f.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* --- SECTION: Final CTA Banner --- */}
       <section className="landing-cta-banner">
         <div className="cta-banner-inner">
           <h2 className="cta-banner-title">Ready to track sanitation conditions?</h2>

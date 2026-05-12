@@ -1,24 +1,10 @@
-// MapPage.jsx
-// Interactive map of sanitation facilities in Northern Ghana.
-// Features:
-//   - Condition filter bar (All / Good / Fair / Poor / Critical)
-//   - Color-coded CircleMarkers for every report with GPS
-//   - Click popup with facility details
-//   - Sidebar listing recent located reports
-//   - Legend overlay with live count
-//
-// All data from useReports hook — zero extra Firestore reads.
-// Route: /map (protected — requires login)
-
 import React, { useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Popup, GeoJSON } from "react-leaflet";
 import { useReports } from "../hooks/useReports";
 import Navbar from "../components/Navbar";
 import ConditionBadge from "../components/ConditionBadge";
 
-// --- SECTION: Constants ---
-
-// Tamale is the capital of Northern Ghana — a better default center than the old midpoint
+// Tamale is the capital of Northern Ghana — better default center than a generic midpoint
 const NORTHERN_GHANA_CENTER = [9.4034, -0.8424];
 const INITIAL_ZOOM = 8;
 
@@ -38,7 +24,6 @@ const FACILITY_TYPE_LABELS = {
   solid_waste:     "Solid Waste Site",
 };
 
-// Filter bar options — "all" shows every marker
 const FILTER_OPTIONS = [
   { value: "all",      label: "All" },
   { value: "good",     label: "Good" },
@@ -47,11 +32,8 @@ const FILTER_OPTIONS = [
   { value: "critical", label: "Critical" },
 ];
 
-// --- SECTION: Flood Zone GeoJSON ---
-
 // Static GeoJSON polygons for known flood-prone districts in Northern Ghana.
-// Coordinates are approximate district boundaries in [longitude, latitude] order
-// (standard GeoJSON format — note: opposite of Leaflet's [lat, lng]).
+// Coordinates are approximate district boundaries in [longitude, latitude] GeoJSON order.
 // Sources: NADMO flood reports, OCHA Northern Ghana flood assessments.
 const FLOOD_ZONES_GEOJSON = {
   type: "FeatureCollection",
@@ -59,9 +41,9 @@ const FLOOD_ZONES_GEOJSON = {
     {
       type: "Feature",
       properties: {
-        name:      "Tolon District",
-        risk:      "High",
-        note:      "White Volta River floodplain — regularly inundated during peak rains",
+        name: "Tolon District",
+        risk: "High",
+        note: "White Volta River floodplain — regularly inundated during peak rains",
       },
       geometry: {
         type: "Polygon",
@@ -107,7 +89,6 @@ const FLOOD_ZONES_GEOJSON = {
   ],
 };
 
-// Leaflet style object applied to every flood zone polygon
 const FLOOD_ZONE_STYLE = {
   fillColor:   "#e53935",
   fillOpacity: 0.22,
@@ -116,16 +97,12 @@ const FLOOD_ZONE_STYLE = {
   dashArray:   "6 4",
 };
 
-// --- SECTION: Helpers ---
-
-function formatDate(ts) {
+const formatDate = (ts) => {
   if (!ts || !ts.toDate) return "Just now";
   return new Intl.DateTimeFormat("en-GB", {
     day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
   }).format(ts.toDate());
-}
-
-// --- SECTION: MarkerPopup Sub-Component ---
+};
 
 function MarkerPopup({ report }) {
   const typeLabel = FACILITY_TYPE_LABELS[report.facilityType] || report.facilityType;
@@ -136,9 +113,7 @@ function MarkerPopup({ report }) {
         <ConditionBadge condition={report.conditionStatus} />
       </div>
       <div className="map-popup-meta">{typeLabel}</div>
-      <div className="map-popup-meta">
-        By {report.submittedBy?.displayName || "Unknown"}
-      </div>
+      <div className="map-popup-meta">By {report.submittedBy?.displayName || "Unknown"}</div>
       <div className="map-popup-meta">{formatDate(report.createdAt)}</div>
       {report.description && (
         <div className="map-popup-description">
@@ -153,8 +128,6 @@ function MarkerPopup({ report }) {
     </div>
   );
 }
-
-// --- SECTION: MapLegend Sub-Component ---
 
 function MapLegend({ visibleCount, totalLocated }) {
   return (
@@ -177,9 +150,6 @@ function MapLegend({ visibleCount, totalLocated }) {
   );
 }
 
-// --- SECTION: MapSidebar Sub-Component ---
-
-// Panel on the right showing a scrollable list of located reports
 function MapSidebar({ reports }) {
   return (
     <div className="map-sidebar">
@@ -191,7 +161,7 @@ function MapSidebar({ reports }) {
         {reports.length === 0 ? (
           <p className="map-sidebar-empty">No reports with GPS yet.</p>
         ) : (
-          reports.map((report) => (
+          reports.map(report => (
             <div key={report.id} className="map-sidebar-item">
               <div className="map-sidebar-item-top">
                 <span className="map-sidebar-name">{report.facilityName}</span>
@@ -209,22 +179,16 @@ function MapSidebar({ reports }) {
   );
 }
 
-// --- SECTION: Main MapPage Component ---
-
 function MapPage() {
   const { reports, isLoading, error } = useReports(100);
-  const [activeFilter,    setActiveFilter]    = useState("all");
-  const [showFloodZones,  setShowFloodZones]  = useState(false);
+  const [activeFilter,   setActiveFilter]   = useState("all");
+  const [showFloodZones, setShowFloodZones] = useState(false);
 
-  // All reports that have valid GPS coordinates
-  const locatedReports = reports.filter(
-    (r) => r.location?.latitude && r.location?.longitude
-  );
+  const locatedReports = reports.filter(r => r.location?.latitude && r.location?.longitude);
 
-  // Filtered subset shown as markers (and in sidebar)
   const filteredReports = activeFilter === "all"
     ? locatedReports
-    : locatedReports.filter((r) => r.conditionStatus === activeFilter);
+    : locatedReports.filter(r => r.conditionStatus === activeFilter);
 
   return (
     <div className="map-page page-fade-in">
@@ -233,13 +197,11 @@ function MapPage() {
       {isLoading && <div className="map-status-bar">Loading facility data...</div>}
       {error     && <div className="map-status-bar error">{error}</div>}
 
-      {/* --- SECTION: Filter Bar --- */}
       <div className="map-filter-bar">
-        {FILTER_OPTIONS.map((opt) => {
+        {FILTER_OPTIONS.map(opt => {
           const count = opt.value === "all"
             ? locatedReports.length
-            : locatedReports.filter((r) => r.conditionStatus === opt.value).length;
-
+            : locatedReports.filter(r => r.conditionStatus === opt.value).length;
           return (
             <button
               key={opt.value}
@@ -252,23 +214,18 @@ function MapPage() {
           );
         })}
 
-        {/* Divider separating condition filters from the climate risk toggle */}
         <div className="map-filter-divider" />
 
-        {/* Climate risk toggle — overlays flood-prone district polygons */}
         <button
           className={`map-filter-btn map-flood-toggle ${showFloodZones ? "active" : ""}`}
-          onClick={() => setShowFloodZones((prev) => !prev)}
+          onClick={() => setShowFloodZones(prev => !prev)}
           title="Toggle flood-risk zone overlay for Northern Ghana districts"
         >
           🌊 Flood Risk
         </button>
       </div>
 
-      {/* --- SECTION: Map + Sidebar layout --- */}
       <div className="map-page-body">
-
-        {/* Map area */}
         <div className="map-wrapper">
           <MapContainer
             center={NORTHERN_GHANA_CENTER}
@@ -280,7 +237,7 @@ function MapPage() {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            {/* Flood zone overlay — rendered below facility markers so markers stay on top */}
+            {/* flood zones render below markers so orange circles stay on top */}
             {showFloodZones && (
               <GeoJSON
                 key="flood-zones"
@@ -297,8 +254,7 @@ function MapPage() {
               />
             )}
 
-            {/* One marker per filtered report */}
-            {filteredReports.map((report) => {
+            {filteredReports.map(report => {
               const color = CONDITION_MARKER_COLORS[report.conditionStatus] || "#9e9e9e";
               return (
                 <CircleMarker
@@ -320,13 +276,8 @@ function MapPage() {
             })}
           </MapContainer>
 
-          {/* Legend overlay */}
-          <MapLegend
-            visibleCount={filteredReports.length}
-            totalLocated={locatedReports.length}
-          />
+          <MapLegend visibleCount={filteredReports.length} totalLocated={locatedReports.length} />
 
-          {/* Empty overlay when no markers match the current filter */}
           {!isLoading && filteredReports.length === 0 && (
             <div className="map-empty-overlay">
               <div className="map-empty-card">
@@ -342,9 +293,7 @@ function MapPage() {
           )}
         </div>
 
-        {/* Sidebar — hidden on mobile via CSS */}
         <MapSidebar reports={filteredReports} />
-
       </div>
     </div>
   );
