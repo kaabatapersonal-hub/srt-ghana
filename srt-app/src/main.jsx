@@ -7,6 +7,8 @@
 import React from "react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+// Leaflet CSS must be imported before our app CSS so our overrides take effect
+import "leaflet/dist/leaflet.css";
 import "./index.css";
 import App from "./App.jsx";
 
