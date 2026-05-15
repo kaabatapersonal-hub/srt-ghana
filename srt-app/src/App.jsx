@@ -26,6 +26,7 @@ import DashboardPage from "./pages/DashboardPage";
 import ReportPage from "./pages/ReportPage";
 import MapPage from "./pages/MapPage";
 import AdminPage from "./pages/AdminPage";
+import USSDPage from "./pages/USSDPage";
 
 function AppRoutes() {
   useOfflineSync();
@@ -42,6 +43,7 @@ function AppRoutes() {
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/report"    element={<ProtectedRoute><ReportPage /></ProtectedRoute>} />
           <Route path="/map"       element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
+          <Route path="/ussd"      element={<ProtectedRoute><USSDPage /></ProtectedRoute>} />
 
           {/* --- SECTION: Admin-Only Route --- */}
           <Route path="/admin" element={

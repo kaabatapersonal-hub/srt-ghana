@@ -26,6 +26,7 @@ function Navbar() {
         <NavLink to="/dashboard" className={navClass}>Dashboard</NavLink>
         <NavLink to="/map" className={navClass}>Map</NavLink>
         <NavLink to="/report" className={navClass}>Report</NavLink>
+        <NavLink to="/ussd"   className={navClass}>USSD</NavLink>
 
         {isAdmin && (
           <NavLink

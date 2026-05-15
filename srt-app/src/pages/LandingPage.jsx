@@ -124,6 +124,51 @@ function LandingPage() {
         </div>
       </section>
 
+      <section className="landing-ussd-section">
+        <div className="ussd-section-inner">
+          <div className="ussd-section-text">
+            <div className="ussd-section-badge">USSD Support</div>
+            <h2 className="ussd-section-title">No Smartphone?<br />No Problem.</h2>
+            <p className="ussd-section-desc">
+              SRT works on <strong>any basic mobile phone</strong> via USSD — no internet,
+              no data plan, no app required. Field agents in the most remote areas can
+              submit reports directly from the field using just a phone call.
+            </p>
+            <div className="ussd-code-block">*713#</div>
+            <p className="ussd-code-label">Dial from any phone to start reporting</p>
+            <Link to="/ussd" className="cta-btn primary" style={{ display: "inline-block", marginTop: "1.25rem" }}>
+              Try the Simulator →
+            </Link>
+          </div>
+
+          <div className="ussd-flow-demo">
+            <div className="ussd-demo-phone">
+              <div className="ussd-demo-screen">
+                <div className="ussd-demo-row">
+                  <span className="ussd-demo-tag">CON</span>
+                  <span>Welcome to SRT<br />1. Report Facility<br />2. Check Status<br />3. Emergency Alert</span>
+                </div>
+                <div className="ussd-demo-arrow">↓ &nbsp;Press 1</div>
+                <div className="ussd-demo-row">
+                  <span className="ussd-demo-tag">CON</span>
+                  <span>Enter facility name:</span>
+                </div>
+                <div className="ussd-demo-arrow">↓ &nbsp;Type name, Send</div>
+                <div className="ussd-demo-row">
+                  <span className="ussd-demo-tag">CON</span>
+                  <span>Select condition:<br />1. Good &nbsp;2. Fair<br />3. Poor &nbsp;4. Critical</span>
+                </div>
+                <div className="ussd-demo-arrow">↓ &nbsp;Press 3</div>
+                <div className="ussd-demo-row end">
+                  <span className="ussd-demo-tag end">END</span>
+                  <span>Report submitted!<br />Ref: #SRT-A1B2C<br />Thank you.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="landing-cta-banner">
         <div className="cta-banner-inner">
           <h2 className="cta-banner-title">Ready to track sanitation conditions?</h2>

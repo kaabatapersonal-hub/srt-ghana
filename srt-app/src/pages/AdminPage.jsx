@@ -23,6 +23,7 @@ const FACILITY_TYPE_SHORT = {
   sewage:          "Sewage",
   water_treatment: "Water Treat.",
   solid_waste:     "Solid Waste",
+  other:           "Other",
 };
 
 const FACILITY_TYPE_LABELS = {
@@ -32,7 +33,14 @@ const FACILITY_TYPE_LABELS = {
   sewage:          "Sewage / Drainage",
   water_treatment: "Water Treatment",
   solid_waste:     "Solid Waste Site",
+  other:           "Other / Unspecified",
 };
+
+const SOURCE_TABS = [
+  { key: "all",  label: "All Sources" },
+  { key: "web",  label: "Web App"     },
+  { key: "ussd", label: "USSD"        },
+];
 
 const formatDate = (ts) => {
   if (!ts || !ts.toDate) return "Just now";
@@ -135,6 +143,9 @@ function AdminReportCard({ report, isActioning, onApprove, onReject }) {
 
       <div className="admin-report-footer">
         <StatusBadge status={report.status} />
+        {report.source === "ussd" && (
+          <span className="admin-footer-tag ussd-tag">📟 USSD</span>
+        )}
         {report.location
           ? <span className="admin-footer-tag gps-yes">📍 GPS</span>
           : <span className="admin-footer-tag gps-no">No GPS</span>
@@ -153,6 +164,7 @@ function AdminPage() {
   const { reports, isLoading, error } = useReports(100);
 
   const [activeFilter,      setActiveFilter]      = useState("pending");
+  const [sourceFilter,      setSourceFilter]      = useState("all");
   const [searchQuery,       setSearchQuery]       = useState("");
   const [actioningReportId, setActioningReportId] = useState(null);
   const [actionError,       setActionError]       = useState("");
@@ -165,11 +177,17 @@ function AdminPage() {
     ? reports
     : reports.filter(r => r.status === activeFilter);
 
+  const sourceFiltered = sourceFilter === "all"
+    ? statusFiltered
+    : sourceFilter === "ussd"
+      ? statusFiltered.filter(r => r.source === "ussd")
+      : statusFiltered.filter(r => !r.source || r.source === "web");
+
   const filteredReports = searchQuery.trim()
-    ? statusFiltered.filter(r =>
+    ? sourceFiltered.filter(r =>
         r.facilityName?.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : statusFiltered;
+    : sourceFiltered;
 
   async function handleApprove(reportId) {
     setActioningReportId(reportId);
@@ -265,6 +283,20 @@ function AdminPage() {
               </button>
             );
           })}
+        </div>
+
+        <div className="source-filter-row" role="tablist">
+          {SOURCE_TABS.map(tab => (
+            <button
+              key={tab.key}
+              role="tab"
+              aria-selected={sourceFilter === tab.key}
+              className={`source-tab ${sourceFilter === tab.key ? "active" : ""}`}
+              onClick={() => setSourceFilter(tab.key)}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {isLoading ? (

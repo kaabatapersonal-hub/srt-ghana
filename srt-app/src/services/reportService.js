@@ -22,6 +22,7 @@ export async function submitReport(reportData, currentUser) {
     description:     reportData.description,
     location:        reportData.location,
     photoUrl:        null,
+    source:          reportData.source || "web",
     submittedBy: {
       uid:         currentUser.uid,
       displayName: currentUser.displayName || currentUser.email,
